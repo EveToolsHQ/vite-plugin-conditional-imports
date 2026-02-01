@@ -1,3 +1,4 @@
+import { readdir } from 'node:fs/promises'
 import { join } from 'node:path'
 
 import type {
@@ -75,12 +76,20 @@ function logContexts(
   }
 }
 
-function buildWithPlugin(
-  fixture: string,
-  shouldStrip: ShouldStripFn,
-  mode: 'production' | 'development',
-  options?: Options
-) {
+interface BuildWithPluginOptions {
+  fixture: string
+  shouldStrip: ShouldStripFn
+  mode: 'production' | 'development'
+  shouldStripOptions?: Options
+  /** When true, write bundle to disk (Vite default dist/ under fixture root). */
+  write?: boolean
+  sourceMap?: boolean | 'inline' | 'hidden'
+}
+
+function buildWithPlugin(options: BuildWithPluginOptions) {
+  const { fixture, shouldStrip, mode, shouldStripOptions, write, sourceMap } =
+    options
+
   const root = join(fixturesDir, fixture)
 
   return build({
@@ -88,24 +97,25 @@ function buildWithPlugin(
     mode,
     logLevel: 'warn',
     build: {
-      write: false,
+      write: !!write,
+      ...(sourceMap !== undefined && { sourcemap: sourceMap }),
       rollupOptions: {
         input: join(root, 'index.ts'),
         treeshake: true,
       },
     },
-    plugins: [conditionalImports(shouldStrip, options)],
+    plugins: [conditionalImports(shouldStrip, shouldStripOptions)],
   })
 }
 
 describe('vite-plugin-conditional-imports', () => {
   it('strips dev-only import', async () => {
     const ctxs: ContextSnapshot[] = []
-    const result = await buildWithPlugin(
-      'dev-only-stripped',
-      logContexts(ctxs, ctx => ctx.withObject?.only === 'dev'),
-      'production'
-    )
+    const result = await buildWithPlugin({
+      fixture: 'dev-only-stripped',
+      shouldStrip: logContexts(ctxs, ctx => ctx.withObject?.only === 'dev'),
+      mode: 'production',
+    })
 
     const out = getOutput(result)
     const code = getFirstJsChunkCode(out)
@@ -126,11 +136,11 @@ describe('vite-plugin-conditional-imports', () => {
   })
 
   it('keeps import when shouldStrip returns false', async () => {
-    const result = await buildWithPlugin(
-      'dev-only-stripped',
-      () => false,
-      'development'
-    )
+    const result = await buildWithPlugin({
+      fixture: 'dev-only-stripped',
+      shouldStrip: () => false,
+      mode: 'development',
+    })
 
     const out = getOutput(result)
     const code = getFirstJsChunkCode(out)
@@ -142,11 +152,11 @@ describe('vite-plugin-conditional-imports', () => {
 
   it('does not process type-only imports for stripping', async () => {
     const ctxs: ContextSnapshot[] = []
-    const result = await buildWithPlugin(
-      'type-only',
-      logContexts(ctxs, ctx => ctx.withObject?.only === 'dev'),
-      'production'
-    )
+    const result = await buildWithPlugin({
+      fixture: 'type-only',
+      shouldStrip: logContexts(ctxs, ctx => ctx.withObject?.only === 'dev'),
+      mode: 'production',
+    })
 
     const out = getOutput(result)
     const code = getFirstJsChunkCode(out)
@@ -163,11 +173,11 @@ describe('vite-plugin-conditional-imports', () => {
 
   it('fails build when stripped named import is still referenced', async () => {
     await expect(
-      buildWithPlugin(
-        'dev-only-not-guarded',
-        ctx => ctx.withObject?.only === 'dev',
-        'production'
-      )
+      buildWithPlugin({
+        fixture: 'dev-only-not-guarded',
+        shouldStrip: ctx => ctx.withObject?.only === 'dev',
+        mode: 'production',
+      })
     ).rejects.toThrow(
       "Stripped conditional import binding 'debug' still in output (index.ts)"
     )
@@ -175,11 +185,11 @@ describe('vite-plugin-conditional-imports', () => {
 
   it('fails build when stripped default import is still referenced', async () => {
     await expect(
-      buildWithPlugin(
-        'default-not-guarded',
-        ctx => ctx.withObject?.only === 'dev',
-        'production'
-      )
+      buildWithPlugin({
+        fixture: 'default-not-guarded',
+        shouldStrip: ctx => ctx.withObject?.only === 'dev',
+        mode: 'production',
+      })
     ).rejects.toThrow(
       "Stripped conditional import binding 'debug' still in output (index.ts)"
     )
@@ -187,22 +197,22 @@ describe('vite-plugin-conditional-imports', () => {
 
   it('fails build when stripped namespace import is still referenced', async () => {
     await expect(
-      buildWithPlugin(
-        'namespace-not-guarded',
-        ctx => ctx.withObject?.only === 'dev',
-        'production'
-      )
+      buildWithPlugin({
+        fixture: 'namespace-not-guarded',
+        shouldStrip: ctx => ctx.withObject?.only === 'dev',
+        mode: 'production',
+      })
     ).rejects.toThrow(
       "Stripped conditional import binding 'devOnly' still in output (index.ts)"
     )
   })
 
   it('does not strip import without with when shouldStrip checks attributes', async () => {
-    const result = await buildWithPlugin(
-      'import-without-with',
-      ctx => ctx.withObject?.only === 'dev',
-      'production'
-    )
+    const result = await buildWithPlugin({
+      fixture: 'import-without-with',
+      shouldStrip: ctx => ctx.withObject?.only === 'dev',
+      mode: 'production',
+    })
 
     const out = getOutput(result)
     const code = getFirstJsChunkCode(out)
@@ -211,11 +221,11 @@ describe('vite-plugin-conditional-imports', () => {
   })
 
   it('strips one conditional import and keeps another in same file', async () => {
-    const result = await buildWithPlugin(
-      'multiple-imports',
-      ctx => ctx.withObject?.only === 'dev',
-      'production'
-    )
+    const result = await buildWithPlugin({
+      fixture: 'multiple-imports',
+      shouldStrip: ctx => ctx.withObject?.only === 'dev',
+      mode: 'production',
+    })
 
     const out = getOutput(result)
     const code = getFirstJsChunkCode(out)
@@ -227,12 +237,12 @@ describe('vite-plugin-conditional-imports', () => {
 
   it('fails build with autoSourceMaps false and lists all files when multiple reference same dev symbol', async () => {
     await expect(
-      buildWithPlugin(
-        'multiple-source-files',
-        ctx => ctx.withObject?.only === 'dev',
-        'production',
-        { autoSourceMaps: false }
-      )
+      buildWithPlugin({
+        fixture: 'multiple-source-files',
+        shouldStrip: ctx => ctx.withObject?.only === 'dev',
+        mode: 'production',
+        shouldStripOptions: { autoSourceMaps: false },
+      })
     ).rejects.toThrow(
       "Stripped conditional import binding 'devOnly' still in output (a.ts, b.ts)"
     )
@@ -240,13 +250,45 @@ describe('vite-plugin-conditional-imports', () => {
 
   it('fails build with error pointing to file that references stripped binding', async () => {
     await expect(
-      buildWithPlugin(
-        'multiple-source-files',
-        ctx => ctx.withObject?.only === 'dev',
-        'production'
-      )
+      buildWithPlugin({
+        fixture: 'multiple-source-files',
+        shouldStrip: ctx => ctx.withObject?.only === 'dev',
+        mode: 'production',
+      })
     ).rejects.toThrow(
       "Stripped conditional import binding 'devOnly' still in output (a.ts)"
     )
+  })
+
+  it('deletes source maps after build when plugin enabled them (autoSourceMaps)', async () => {
+    const fixture = 'dev-only-stripped'
+    await buildWithPlugin({
+      fixture,
+      shouldStrip: ctx => ctx.withObject?.only === 'dev',
+      mode: 'production',
+      write: true,
+    })
+
+    const outDir = join(fixturesDir, fixture, 'dist/assets')
+    const files = await readdir(outDir)
+    const mapFiles = files.filter(f => f.endsWith('.map'))
+
+    expect(mapFiles).toHaveLength(0)
+  })
+
+  it('keeps source maps when user set sourcemap to true', async () => {
+    const fixture = 'dev-only-stripped'
+    await buildWithPlugin({
+      fixture,
+      shouldStrip: ctx => ctx.withObject?.only === 'dev',
+      mode: 'production',
+      write: true,
+      sourceMap: 'hidden',
+    })
+
+    const outDir = join(fixturesDir, fixture, 'dist/assets')
+    const files = await readdir(outDir)
+    const mapFiles = files.filter(f => f.endsWith('.map'))
+    expect(mapFiles.length).toBeGreaterThan(0)
   })
 })

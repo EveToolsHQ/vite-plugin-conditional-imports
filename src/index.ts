@@ -161,12 +161,19 @@ export function conditionalImports(
     },
 
     async writeBundle(options, bundle) {
-      if (!pluginRequestedSourcemap || !options.dir) return
-      for (const name of Object.keys(bundle)) {
-        if (name.endsWith('.map')) {
-          await unlink(join(options.dir, name)).catch(() => {})
-        }
+      if (!pluginRequestedSourcemap || !options.dir) {
+        return
       }
+
+      log('Deleting build-only source maps')
+
+      const dir = options.dir
+
+      const toDelete = Object.keys(bundle)
+        .filter(name => name.endsWith('.map'))
+        .map(name => join(dir, name))
+
+      await Promise.all(toDelete.map(path => unlink(path)))
     },
   }
 }
