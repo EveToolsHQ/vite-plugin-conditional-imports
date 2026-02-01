@@ -28,7 +28,7 @@
     "build": "tsup src/index.ts --format esm --dts --tsconfig tsconfig.build.json",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "prepublishOnly": "pnpm lint && pnpm test",
+    "prepublishOnly": "pnpm lint && pnpm test && pnpm build",
     "test": "vitest run",
     "test:watch": "vitest"
   },
