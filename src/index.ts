@@ -105,6 +105,11 @@ export function conditionalImports(
     },
 
     async transform(code, id) {
+      // Only run on the user's code
+      if (id.includes('/node_modules/')) {
+        return null
+      }
+
       if (!cachedConfig || !cachedEnv) {
         return this.error(
           'vite-plugin-conditional-imports: config or env not resolved'
