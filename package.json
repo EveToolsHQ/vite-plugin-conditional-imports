@@ -1,0 +1,69 @@
+{
+  "name": "vite-plugin-conditional-imports",
+  "version": "0.1.0",
+  "description": "Strip conditional imports (only, path patterns, or custom predicate) in production builds and warn on leftover references",
+  "keywords": [
+    "vite",
+    "vite-plugin",
+    "conditional-imports",
+    "tree-shake"
+  ],
+  "license": "MIT",
+  "author": "Val (https://val.codejam.info)",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "repository": "EveToolsHQ/vite-plugin-conditional-imports",
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --tsconfig tsconfig.build.json",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "prepublishOnly": "pnpm lint && pnpm test",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@jridgewell/trace-mapping": "^0.3.31",
+    "@swc/core": "^1.15.11",
+    "debug": "^4.4.3",
+    "eslint": "^9.39.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@types/debug": "^4.1.12",
+    "@types/node": "^25.1.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import-x": "^4.16.0",
+    "eslint-plugin-prettier": "^5.5.5",
+    "eslint-plugin-unused-imports": "^4.3.0",
+    "minimatch": "^10.1.1",
+    "prettier": "^3.8.1",
+    "rollup": "^4.57.1",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.54.0",
+    "vite": "^7.3.1",
+    "vitest": "^4.0.18"
+  },
+  "peerDependencies": {
+    "vite": ">=5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "vite": {
+      "optional": false
+    }
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
