@@ -5,7 +5,7 @@ import unusedImports from 'eslint-plugin-unused-imports'
 import tseslint from 'typescript-eslint'
 
 export default [
-  { ignores: ['node_modules', 'dist'] },
+  { ignores: ['node_modules', 'dist', 'test/fixtures/*/dist'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
