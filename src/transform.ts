@@ -2,8 +2,8 @@ import path from 'node:path'
 
 import type { ModuleItem } from '@swc/core'
 import { parse, print } from '@swc/core'
-import { ConfigEnv, normalizePath, ResolvedConfig } from 'vite'
 import type { PluginContext } from 'rollup'
+import { ConfigEnv, normalizePath, ResolvedConfig } from 'vite'
 
 import { getImportAttributes } from './importAttributes.js'
 import type { ShouldStripContext, ShouldStripFn } from './index.js'

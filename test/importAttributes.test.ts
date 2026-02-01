@@ -1,6 +1,6 @@
 import { parse } from '@swc/core'
-import { describe, expect, it } from 'vitest'
 import type { ImportDeclaration, ModuleItem } from '@swc/core'
+import { describe, expect, it } from 'vitest'
 import { getImportAttributes } from '../src/importAttributes.js'
 
 async function parseImport(source: string): Promise<ImportDeclaration> {

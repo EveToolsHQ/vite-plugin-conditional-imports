@@ -15,7 +15,12 @@ export default [
     },
     rules: {
       'import-x/first': 'error',
-      'import-x/order': 'error',
+      'import-x/order': [
+        'error',
+        {
+          alphabetize: { order: 'asc', caseInsensitive: true },
+        },
+      ],
       '@typescript-eslint/no-unused-vars': 'off',
       'unused-imports/no-unused-imports': 'error',
       'unused-imports/no-unused-vars': [
