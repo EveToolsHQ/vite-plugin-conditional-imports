@@ -25,7 +25,7 @@
   "types": "./dist/index.d.ts",
   "repository": "EveToolsHQ/vite-plugin-conditional-imports",
   "scripts": {
-    "build": "tsup src/index.ts --format esm --dts --tsconfig tsconfig.build.json",
+    "build": "tsup src/index.ts --format esm --tsconfig tsconfig.build.json && tsc -p tsconfig.build.json",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prepublishOnly": "pnpm lint && pnpm test && pnpm build",
@@ -48,6 +48,7 @@
     "eslint-plugin-unused-imports": "^4.4.1",
     "minimatch": "^10.2.5",
     "prettier": "^3.8.3",
+    "rolldown": "1.0.2",
     "rollup": "^4.60.4",
     "tsup": "^8.5.1",
     "typescript": "^6.0.3",

@@ -3,8 +3,14 @@ import { join } from 'node:path'
 import { SourceMapInput } from '@jridgewell/trace-mapping'
 import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping'
 import { Linter } from 'eslint'
-import type { OutputAsset, OutputChunk } from 'rollup'
-import { relativeToRoot } from './transform'
+import type { OutputBundle, OutputChunk } from 'rolldown'
+
+import { relativeToRoot } from './transform.js'
+
+type ChunkForCheck = Pick<
+  OutputChunk,
+  'code' | 'map' | 'moduleIds' | 'modules' | 'sourcemapFileName' | 'fileName'
+>
 
 export interface UndefinedRef {
   name: string
@@ -61,7 +67,7 @@ export function findUndefinedRefs(code: string): UndefinedRef[] {
 }
 
 function checkChunk(
-  chunk: OutputChunk,
+  chunk: ChunkForCheck,
   importSymbolsToSource: Map<string, string[]>,
   root: string,
   outputDir: string | undefined
@@ -128,7 +134,7 @@ function checkChunk(
  * conditional imports.
  */
 export function checkBundle(
-  bundle: Record<string, OutputChunk | OutputAsset>,
+  bundle: OutputBundle,
   importSymbolsToSource: Map<string, string[]>,
   root: string, // Project root to resolve paths in error messages
   outputDir?: string // Build output directory to resolve source map paths
@@ -139,14 +145,12 @@ export function checkBundle(
 
   const errors: string[] = []
 
-  for (const chunkOrAsset of Object.values(bundle)) {
-    if (chunkOrAsset.type !== 'chunk') {
+  for (const entry of Object.values(bundle)) {
+    if (entry.type !== 'chunk') {
       continue
     }
 
-    errors.push(
-      ...checkChunk(chunkOrAsset, importSymbolsToSource, root, outputDir)
-    )
+    errors.push(...checkChunk(entry, importSymbolsToSource, root, outputDir))
   }
 
   return errors
