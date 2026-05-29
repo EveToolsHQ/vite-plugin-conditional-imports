@@ -1,12 +1,7 @@
 import { readdir } from 'node:fs/promises'
 import { join } from 'node:path'
 
-import type {
-  OutputAsset,
-  OutputChunk,
-  RollupOutput,
-  RollupWatcher,
-} from 'rollup'
+import type { OutputAsset, OutputChunk } from 'rollup'
 import { build } from 'vite'
 import { describe, expect, it } from 'vitest'
 import {
@@ -17,15 +12,19 @@ import {
 
 type BuildResult = Awaited<ReturnType<typeof build>>
 
-function isRollupOutput(o: RollupOutput | RollupWatcher): o is RollupOutput {
+type BuildOutput = {
+  output: readonly (OutputChunk | OutputAsset)[]
+}
+
+function hasBuildOutput(o: unknown): o is BuildOutput {
   return !!o && typeof o === 'object' && 'output' in o
 }
 
-function getOutput(result: BuildResult): RollupOutput {
+function getOutput(result: BuildResult): BuildOutput {
   const out = Array.isArray(result) ? result[0] : result
 
-  if (!isRollupOutput(out)) {
-    throw new Error('Expected RollupOutput')
+  if (!hasBuildOutput(out)) {
+    throw new Error('Expected build output with output array')
   }
 
   return out
@@ -35,7 +34,7 @@ function isChunk(o: OutputChunk | OutputAsset): o is OutputChunk {
   return o.type === 'chunk'
 }
 
-function getFirstJsChunkCode(out: RollupOutput): string {
+function getFirstJsChunkCode(out: BuildOutput): string {
   const chunk = out.output
     .filter(o => isChunk(o))
     .find(c => c.fileName.endsWith('.js'))
