@@ -121,7 +121,7 @@ export function conditionalImports(
       }
 
       const result = await transform(code, id, shouldStrip, {
-        resolve: this.resolve,
+        resolve: this.resolve.bind(this),
         config: cachedConfig,
         env: cachedEnv,
       })
