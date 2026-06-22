@@ -1,6 +1,6 @@
 {
   "name": "vite-plugin-conditional-imports",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Strip conditional imports in production builds and warn on leftover references",
   "keywords": [
     "vite",
