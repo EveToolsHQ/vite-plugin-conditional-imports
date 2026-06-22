@@ -1,8 +1,7 @@
-# vite-plugin-conditional-imports
+# vite-plugin-conditional-imports [![npm version](https://img.shields.io/npm/v/vite-plugin-conditional-imports.svg?style=flat-square)](https://www.npmjs.com/package/vite-plugin-conditional-imports)
 
-[![npm version](https://img.shields.io/npm/v/vite-plugin-conditional-imports.svg)](https://www.npmjs.com/package/vite-plugin-conditional-imports)
-
-> Vite plugin to strip imports conditionally.
+Strip conditional imports by `only` metadata, path patterns, or a custom
+predicate, and fail the build on leftover references.
 
 Typical use case:
 
@@ -22,6 +21,12 @@ If we forget to guard dev code, the plugin notices missing references in
 the chunk output and **fails the build**.
 
 You can also perform stripping based on the import path itself.
+
+## Install
+
+```sh
+npm i -D vite-plugin-conditional-imports
+```
 
 ## Usage
 

@@ -1,7 +1,7 @@
 {
   "name": "vite-plugin-conditional-imports",
   "version": "0.2.0",
-  "description": "Strip conditional imports (only, path patterns, or custom predicate) in production builds and warn on leftover references",
+  "description": "Strip conditional imports in production builds and warn on leftover references",
   "keywords": [
     "vite",
     "vite-plugin",
